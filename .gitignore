@@ -1,24 +1,60 @@
-*.log
-.DS_Store
+# Kredensial, Environment & Secrets (SANGAT PENTING: Jangan sampai ter-push)
 .env
 .env.backup
+.env.*.local
 .env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
+auth.json
+/storage/*.key
+
+# Dependencies (Ukurannya besar, di-install otomatis)
 /node_modules
-/public/build
+/vendor
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database Lokal & Backup Dump
+*.sqlite*
+*.sql
+*.sql.gz
+
+# Runtime, Log & Framework Storage
+*.log
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+!/storage/framework/cache/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/views/.gitignore
+!/storage/logs/.gitignore
+/storage/pail
+
+# Vite, Assets & Public Symlink
 /public/hot
 /public/storage
-/storage/*.key
-/storage/pail
-/vendor
+# /public/build
+
+# Testing (Folder dan Konfigurasi Test Tidak Di-push)
+/tests
+phpunit.xml
+.phpunit.cache
+.phpunit.result.cache
+
+# Editor & OS Files (Metadata Lokal)
+.DS_Store
+Thumbs.db
+desktop.ini
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+.phpactor.json
 Homestead.json
 Homestead.yaml
-Thumbs.db
+
+# Dokumentasi Internal / PRD (Agar tidak ter-push ke GitHub publik)
+ERD.md
+IMPLEMENTATION-PLAN.md
+PRD_be_Pipeline_CC_1.md

@@ -1,59 +1,199 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Pipeline CC — Content Creator Production Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A production management web application built for **Solo Creators**, **Production Teams (Editors)**, and **Administrators** to streamline content ideation, scripting, production pipelines, publishing workflows, and manual performance analytics across multiple social media channels (YouTube, TikTok, Instagram, LinkedIn).
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🛠️ Technology Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Framework**: [Laravel 12 (PHP 8.2+)](https://laravel.com)
+- **Interactive UI**: [Livewire v4](https://livewire.laravel.com) (Real-time Kanban Drag-and-Drop & Interactive Filterable Table)
+- **Templating**: Blade Components
+- **Styling**: Bootstrap 5.3 & Bootstrap Icons
+- **Asset Bundling**: Vite 7
+- **Database**: MySQL 8.0+ (with strict relational foreign keys and cascade rules)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🚀 Panduan Menjalankan Project (Cara Setup Setelah Clone)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Ikuti langkah-langkah berikut untuk menjalankan project ini di komputer lokal:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Prasyarat Sistem (Prerequisites)
 
-## Laravel Sponsors
+Device sudah terinstal:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- **PHP >= 8.2**
+- **Composer** (versi 2+)
+- **Node.js** (versi 18+ atau 20+) & **NPM**
+- **MySQL Database Server** (bisa menggunakan Laragon, XAMPP)
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Langkah Instalasi Langkah demi Langkah
 
-## Contributing
+#### **Langkah 1: Masuk ke direktori project**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Buka terminal / command prompt:
 
-## Code of Conduct
+```bash
+cd pipeline_cc
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### **Langkah 2: Install dependencies PHP (Composer)**
 
-## Security Vulnerabilities
+```bash
+composer install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### **Langkah 3: Install dependencies JavaScript (NPM)**
 
-## License
+```bash
+npm install
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+_(Catatan pengguna Windows: jika ada pembatasan script execution policy, gunakan perintah `npm.cmd install`)_
+
+#### **Langkah 4: Buat File Konfigurasi `.env`**
+
+Salin file template `.env.example` menjadi `.env`:
+
+- **Di Windows (CMD / PowerShell):**
+    ```bash
+    copy .env.example .env
+    ```
+- **Di Linux / macOS / Git Bash:**
+    ```bash
+    cp .env.example .env
+    ```
+
+#### **Langkah 5: Konfigurasi Database di file `.env`**
+
+Buka file `.env`, lalu pastikan pengaturan database sesuai dengan MySQL lokal Anda:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=pipeline_cc
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+#### **Langkah 6: Buat Database di MySQL**
+
+Buat database baru bernama **`pipeline_cc`** di MySQL Anda (melalui phpMyAdmin, HeidiSQL, DBeaver, atau terminal MySQL):
+
+```sql
+CREATE DATABASE pipeline_cc;
+```
+
+#### **Langkah 7: Generate Application Key**
+
+```bash
+php artisan key:generate
+```
+
+#### **Langkah 8: Jalankan Migrasi & Seeder Data Awal**
+
+Perintah ini akan membuat semua struktur tabel dan otomatis mengisi data sample (user default, channel, dan kartu konten):
+
+```bash
+php artisan migrate --seed
+```
+
+#### **Langkah 9: Compile Asset Frontend**
+
+- **Untuk Production (sekali build):**
+    ```bash
+    npm run build
+    ```
+- **Untuk Development (Hot-Reloading):**
+    ```bash
+    npm run dev
+    ```
+
+#### **Langkah 10: Jalankan Server Aplikasi**
+
+Buka terminal baru lalu jalankan:
+
+```bash
+php artisan serve
+```
+
+Buka browser dan akses aplikasi di: **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+
+---
+
+## 🔑 Akun Login Default (Seed Credentials)
+
+Semua akun default menggunakan password: **`password`**
+
+| Peran (Role)      | Email                   | Password   | Hak Akses Utama                                                         |
+| ----------------- | ----------------------- | ---------- | ----------------------------------------------------------------------- |
+| **Administrator** | `admin@pipeline.test`   | `password` | Pengawasan sistem, ganti role user, akses penuh                         |
+| **Creator**       | `creator@pipeline.test` | `password` | Buat konten, kelola channel, tugaskan editor, publikasi postingan       |
+| **Editor**        | `editor@pipeline.test`  | `password` | Edit judul, draft naskah & deskripsi, checklist, pindah status ke Ready |
+
+---
+
+## 👥 Matriks Hak Akses & Alur Kerja
+
+| Fitur / Aksi                          |  Admin   |                         Creator                          |              Editor               |
+| ------------------------------------- | :------: | :------------------------------------------------------: | :-------------------------------: |
+| **Kelola Channel (CRUD)**             | ✅ Penuh |                    ✅ Channel Sendiri                    |           ❌ Baca Saja            |
+| **Buat Konten Baru**                  |    ✅    |                            ✅                            |                ❌                 |
+| **Edit Judul, Naskah & Deskripsi**    |    ✅    |                            ✅                            | ✅ (Hanya konten yang ditugaskan) |
+| **Edit Jadwal Rilis (Timeline)**      |    ✅    |                            ✅                            |     ❌ (Hanya Creator/Admin)      |
+| **Tugaskan Editor**                   |    ✅    |                            ✅                            |                ❌                 |
+| **Pindahkan Status ke `Ready`**       |    ✅    | ✅ (Konten solo)<br>⏳ Menunggu Editor (Jika ditugaskan) |  ✅ (Setelah selesai pengerjaan)  |
+| **Publikasikan Konten (`Published`)** |    ✅    |               ✅ (Wajib isi URL & Tanggal)               |     ❌ (Hanya Creator/Admin)      |
+| **Catat Metrik Manual**               |    ✅    |                            ✅                            |           ❌ Baca Saja            |
+| **Manajemen Role User**               |    ✅    |                            ❌                            |                ❌                 |
+
+### Aturan Bisnis Utama:
+
+1. **Pendaftaran Akun Baru**: Pengunjung publik dapat memilih mendaftar sebagai **Creator** atau **Editor**. Setelah registrasi berhasil, sistem mengarahkan ke halaman login (tidak langsung login otomatis).
+2. **Serah Terima ke Ready**: Jika konten memiliki penugasan editor, Creator **tidak dapat** memotong alur langsung ke status `Ready`. Editor yang ditugaskan harus menyelesaikan pengerjaan dan memindahkannya ke `Ready`.
+3. **Publikasi**: Tahap `Published` hanya dapat dilakukan oleh Creator atau Admin dengan mengisi URL postingan media sosial dan tanggal rilis aktual.
+4. **Penghapusan Channel**: Jika suatu channel dihapus, seluruh konten yang terkait dengan channel tersebut (beserta naskah, checklist, dan riwayat metrik) akan otomatis ikut terhapus (_cascade delete_).
+
+---
+
+## 📁 Struktur Direktori Utama
+
+```
+app/
+├── Http/Controllers/
+│   ├── AdminUserController.php     # Manajemen role user oleh admin
+│   ├── AuthController.php          # Login, Register, Logout
+│   ├── ChannelController.php       # CRUD Channel medsos
+│   ├── ContentController.php       # CRUD Konten, penugasan editor, checklist, publish
+│   ├── DashboardController.php     # Dashboard berdasarkan role
+│   └── MetricController.php        # Pencatatan statistik metrik manual
+├── Livewire/
+│   ├── PipelineKanban.php          # Komponen papan Kanban drag-and-drop
+│   └── PipelineTable.php           # Komponen tabel interaktif, filter & pagination
+├── Models/
+│   ├── Channel.php                 # Model Channel medsos
+│   ├── Content.php                 # Model Konten & mesin validasi transisi status
+│   ├── ContentAssignment.php       # Pivot relasi penugasan editor
+│   ├── ContentChecklist.php        # Sub-tugas checklist produksi
+│   ├── ContentMetric.php           # Riwayat performa harian
+│   └── User.php                    # Model user dengan helper role
+└── Policies/
+    ├── ChannelPolicy.php           # Kebijakan kepemilikan channel
+    └── ContentPolicy.php           # Kebijakan otorisasi alur produksi & peran
+resources/views/
+├── auth/                           # Halaman Login & Register
+├── contents/                       # Halaman Create, Edit, Show, Index, Kanban
+├── dashboard/                      # Dashboard Creator, Editor, Admin
+├── livewire/                       # View Blade Livewire (Tabel & Kanban)
+└── metrics/                        # Halaman ringkasan analitik metrik
+```
+
+---
+
+## 📄 Lisensi
+
+Open-source berlisensi [MIT License](https://opensource.org/licenses/MIT).
