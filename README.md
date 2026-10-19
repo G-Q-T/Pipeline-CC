@@ -193,7 +193,3 @@ resources/views/
 ```
 
 ---
-
-## 📄 Lisensi
-
-Open-source berlisensi [MIT License](https://opensource.org/licenses/MIT).
