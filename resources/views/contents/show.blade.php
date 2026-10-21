@@ -69,17 +69,25 @@
 
             <div class="d-flex flex-wrap align-items-center gap-2">
                 @php
-                    $allowedStatuses = $content->getAllowedTransitions();
-                    if (auth()->user()->isEditor()) {
-                        $allowedStatuses = in_array('ready', $allowedStatuses) && $content->status !== 'ready' ? ['ready'] : [];
+                    $user = auth()->user();
+                    $allowedStatuses = [];
+                    if (!$user->isAdmin()) {
+                        $allowedStatuses = $content->getAllowedTransitions();
+                        if ($user->isEditor()) {
+                            $allowedStatuses = in_array('ready', $allowedStatuses) && $content->status !== 'ready' ? ['ready'] : [];
+                        }
+                        if ($user->isCreator() && $content->editors->isNotEmpty()) {
+                            $allowedStatuses = array_values(array_filter($allowedStatuses, fn ($s) => $s !== \App\Models\Content::STATUS_READY));
+                        }
                     }
-                    $isCreatorWaitingForEditor = auth()->user()->isCreator() && $content->editors->isNotEmpty() && $content->status !== 'ready' && $content->status !== 'published';
-                    if (auth()->user()->isCreator() && $content->editors->isNotEmpty()) {
-                        $allowedStatuses = array_values(array_filter($allowedStatuses, fn ($s) => $s !== \App\Models\Content::STATUS_READY));
-                    }
+                    $isCreatorWaitingForEditor = $user->isCreator() && $content->editors->isNotEmpty() && $content->status !== 'ready' && $content->status !== 'published';
                 @endphp
 
-                @if ($content->status !== 'published')
+                @if (auth()->user()->isAdmin())
+                    <span class="badge bg-light text-muted border px-3 py-2 small d-inline-flex align-items-center gap-1.5">
+                        <i class="bi bi-eye text-primary"></i> Mode Monitoring: Admin mengawasi siklus produksi (Read-Only)
+                    </span>
+                @elseif ($content->status !== 'published')
                     @if ($isCreatorWaitingForEditor && in_array($content->status, ['recording', 'editing']))
                         <span class="badge bg-warning-subtle text-warning-emphasis border px-2.5 py-2 small d-inline-flex align-items-center gap-1">
                             <i class="bi bi-hourglass-split"></i> Menunggu penyelesaian oleh Editor: <strong>{{ $content->editors->pluck('name')->join(', ') }}</strong> sebelum dapat ke Ready
@@ -343,6 +351,7 @@
         </div>
     </div>
 
+    @can('managePublication', $content)
     <!-- Modal Publish -->
     <div class="modal fade" id="publishModal" tabindex="-1" aria-labelledby="publishModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -387,7 +396,9 @@
             </div>
         </div>
     </div>
+    @endcan
 
+    @can('manageMetrics', $content)
     <!-- Modal Metric Input -->
     <div class="modal fade" id="metricModal" tabindex="-1" aria-labelledby="metricModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -436,4 +447,5 @@
             </div>
         </div>
     </div>
+    @endcan
 @endsection

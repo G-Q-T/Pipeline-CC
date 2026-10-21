@@ -42,9 +42,7 @@ class ContentController extends Controller
         Gate::authorize('create', Content::class);
 
         $user = Auth::user();
-        $channels = $user->isAdmin()
-            ? Channel::all()
-            : Channel::where('user_id', $user->id)->get();
+        $channels = Channel::where('user_id', $user->id)->get();
 
         if ($channels->isEmpty()) {
             return redirect()->route('channels.create')->with('warning', 'Harap buat minimal satu channel media sosial terlebih dahulu sebelum membuat konten.');
@@ -65,10 +63,7 @@ class ContentController extends Controller
         $user = Auth::user();
 
         // Validate channel ownership
-        $channelRule = Rule::exists('channels', 'id');
-        if (! $user->isAdmin()) {
-            $channelRule = $channelRule->where('user_id', $user->id);
-        }
+        $channelRule = Rule::exists('channels', 'id')->where('user_id', $user->id);
 
         $validated = $request->validate([
             'channel_id' => ['required', 'integer', $channelRule],
@@ -129,10 +124,7 @@ class ContentController extends Controller
     {
         Gate::authorize('update', $content);
 
-        $user = Auth::user();
-        $channels = $user->isAdmin()
-            ? Channel::all()
-            : Channel::where('user_id', $content->user_id)->get();
+        $channels = Channel::where('user_id', $content->user_id)->get();
 
         return view('contents.edit', compact('content', 'channels'));
     }
@@ -159,11 +151,8 @@ class ContentController extends Controller
             return redirect()->route('contents.show', $content)->with('success', 'Judul, naskah, dan deskripsi berhasil diperbarui.');
         }
 
-        // Creator and Admin full update
-        $channelRule = Rule::exists('channels', 'id');
-        if (! $user->isAdmin()) {
-            $channelRule = $channelRule->where('user_id', $content->user_id);
-        }
+        // Creator full update
+        $channelRule = Rule::exists('channels', 'id')->where('user_id', $content->user_id);
 
         $validated = $request->validate([
             'channel_id' => ['required', 'integer', $channelRule],
@@ -198,6 +187,11 @@ class ContentController extends Controller
      */
     public function updateStatus(Request $request, Content $content): RedirectResponse
     {
+        $user = Auth::user();
+
+        if ($user->isAdmin()) {
+            return back()->with('error', 'Sebagai Admin, Anda hanya dapat memonitor proses produksi dan tidak dapat mengubah status konten.');
+        }
         $validated = $request->validate([
             'status' => ['required', 'string', Rule::in(Content::ALLOWED_STATUSES)],
         ]);

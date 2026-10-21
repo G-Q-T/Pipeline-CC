@@ -82,9 +82,11 @@
             @php $columnItems = $columns[$statusKey] ?? collect(); @endphp
             <div class="kanban-column flex-shrink-0 bg-white border rounded-4 shadow-sm p-3"
                  style="width: 310px;"
+                 @if (!auth()->user()->isAdmin())
                  ondragover="event.preventDefault(); this.classList.add('bg-light');"
                  ondragleave="this.classList.remove('bg-light');"
-                 ondrop="event.preventDefault(); this.classList.remove('bg-light'); const cardId = event.dataTransfer.getData('text/plain'); if(cardId) { @this.moveStatus(cardId, '{{ $statusKey }}'); }">
+                 ondrop="event.preventDefault(); this.classList.remove('bg-light'); const cardId = event.dataTransfer.getData('text/plain'); if(cardId) { @this.moveStatus(cardId, '{{ $statusKey }}'); }"
+                 @endif>
 
                 <!-- Column Header -->
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
@@ -106,9 +108,11 @@
                     @else
                         @foreach ($columnItems as $item)
                             <div class="card border shadow-sm rounded-3 p-3 kanban-card bg-white"
+                                 @if (!auth()->user()->isAdmin())
                                  draggable="true"
                                  ondragstart="event.dataTransfer.setData('text/plain', '{{ $item->id }}'); event.dataTransfer.effectAllowed = 'move';"
-                                 style="cursor: grab;">
+                                 style="cursor: grab;"
+                                 @endif>
 
                                 <!-- Platform & Priority -->
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -146,7 +150,9 @@
 
                                     <!-- Accessible Quick Shift Controls -->
                                     <div class="d-flex align-items-center gap-1">
-                                        @if (auth()->user()->isEditor())
+                                        @if (auth()->user()->isAdmin())
+                                            <!-- Mode Monitoring: Tidak ada aksi perubahan status -->
+                                        @elseif (auth()->user()->isEditor())
                                             @if ($item->status !== 'ready' && $item->status !== 'published')
                                                 <button type="button"
                                                         class="btn btn-sm btn-outline-success py-0 px-1.5 rounded-2"

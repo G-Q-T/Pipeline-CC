@@ -161,7 +161,7 @@
                                     <td class="text-end text-muted">{{ $latest ? number_format($latest->shares_count) : '-' }}</td>
                                     <td class="text-end">
                                         <a href="{{ route('contents.show', $item) }}" class="btn btn-sm btn-outline-primary rounded-3">
-                                            <i class="bi bi-graph-up me-1"></i> Detail & Catat
+                                            <i class="bi bi-graph-up me-1"></i> {{ auth()->user()->can('manageMetrics', $item) ? 'Detail & Catat' : 'Detail Metrik' }}
                                         </a>
                                     </td>
                                 </tr>

@@ -40,7 +40,7 @@ class ContentPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isCreator() || $user->isAdmin();
+        return $user->isCreator();
     }
 
     /**
@@ -49,7 +49,7 @@ class ContentPolicy
     public function update(User $user, Content $content): bool
     {
         if ($user->isAdmin()) {
-            return true;
+            return false;
         }
 
         if ($user->isCreator() && $content->user_id === $user->id) {
@@ -69,7 +69,7 @@ class ContentPolicy
     public function delete(User $user, Content $content): bool
     {
         if ($user->isAdmin()) {
-            return true;
+            return false;
         }
 
         // Only creator owner can delete content
@@ -82,7 +82,7 @@ class ContentPolicy
     public function assignEditor(User $user, Content $content): bool
     {
         if ($user->isAdmin()) {
-            return true;
+            return false;
         }
 
         return $user->isCreator() && $content->user_id === $user->id;
@@ -93,6 +93,10 @@ class ContentPolicy
      */
     public function manageChecklist(User $user, Content $content): bool
     {
+        if ($user->isAdmin()) {
+            return false;
+        }
+
         return $this->update($user, $content);
     }
 
@@ -102,7 +106,7 @@ class ContentPolicy
     public function managePublication(User $user, Content $content): bool
     {
         if ($user->isAdmin()) {
-            return true;
+            return false;
         }
 
         return $user->isCreator() && $content->user_id === $user->id;
@@ -114,7 +118,7 @@ class ContentPolicy
     public function manageMetrics(User $user, Content $content): bool
     {
         if ($user->isAdmin()) {
-            return true;
+            return false;
         }
 
         return $user->isCreator() && $content->user_id === $user->id;
@@ -124,10 +128,15 @@ class ContentPolicy
      * Determine whether the user can transition the content status.
      * Editor can only advance assigned content to 'ready' upon completion.
      * Creator cannot advance to 'ready' if editors are assigned to work on it (editor must complete it first).
-     * Publication is restricted strictly to creator/admin.
+     * Publication is restricted strictly to creator.
+     * Admin is strictly restricted to monitoring only.
      */
     public function updateStatus(User $user, Content $content, string $targetStatus): bool
     {
+        if ($user->isAdmin()) {
+            return false;
+        }
+
         if (! $this->update($user, $content)) {
             return false;
         }
@@ -148,7 +157,7 @@ class ContentPolicy
             return false;
         }
 
-        // Publishing requires publication rights (creator or admin)
+        // Publishing requires publication rights (creator)
         if ($targetStatus === Content::STATUS_PUBLISHED) {
             return $this->managePublication($user, $content);
         }

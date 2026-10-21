@@ -142,12 +142,15 @@
                                     <!-- Status with Allowed Inline Transitions -->
                                     <td>
                                         @php
-                                            $allowedTransitions = $content->getAllowedTransitions();
-                                            if (auth()->user()->isEditor()) {
-                                                $allowedTransitions = in_array('ready', $allowedTransitions) && $content->status !== 'ready' ? ['ready'] : [];
-                                            }
-                                            if (auth()->user()->isCreator() && $content->editors->isNotEmpty()) {
-                                                $allowedTransitions = array_values(array_filter($allowedTransitions, fn ($s) => $s !== \App\Models\Content::STATUS_READY));
+                                            $allowedTransitions = [];
+                                            if (!auth()->user()->isAdmin()) {
+                                                $allowedTransitions = $content->getAllowedTransitions();
+                                                if (auth()->user()->isEditor()) {
+                                                    $allowedTransitions = in_array('ready', $allowedTransitions) && $content->status !== 'ready' ? ['ready'] : [];
+                                                }
+                                                if (auth()->user()->isCreator() && $content->editors->isNotEmpty()) {
+                                                    $allowedTransitions = array_values(array_filter($allowedTransitions, fn ($s) => $s !== \App\Models\Content::STATUS_READY));
+                                                }
                                             }
                                         @endphp
                                         @if (count($allowedTransitions) > 0 && $content->status !== 'published')

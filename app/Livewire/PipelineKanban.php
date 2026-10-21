@@ -19,6 +19,12 @@ class PipelineKanban extends Component
         $content = Content::findOrFail($contentId);
         $user = Auth::user();
 
+        // Admin restriction: monitoring only
+        if ($user->isAdmin()) {
+            session()->flash('error', 'Sebagai Admin, Anda hanya dapat memonitor proses produksi dan tidak dapat memindahkan status konten.');
+            return;
+        }
+
         // Editor restriction: can only move completed work to Ready
         if ($user->isEditor() && $targetStatus !== Content::STATUS_READY) {
             session()->flash('error', 'Sebagai Editor, Anda hanya memiliki hak memindahkan pekerjaan ke status Ready setelah selesai. Tahap Published hanya untuk Creator.');
