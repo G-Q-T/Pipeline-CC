@@ -63,7 +63,9 @@ class ChannelController extends Controller
      */
     public function edit(Channel $channel): View
     {
-        Gate::authorize('update', $channel);
+        Gate::authorize('view', $channel);
+
+        $channel->load('user')->loadCount('contents');
 
         return view('channels.edit', compact('channel'));
     }

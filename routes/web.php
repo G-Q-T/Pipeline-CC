@@ -51,14 +51,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/contents/{content}/metrics', [MetricController::class, 'store'])->name('contents.metrics.store');
     Route::delete('/metrics/{metric}', [MetricController::class, 'destroy'])->name('metrics.destroy');
 
-    // Channels (Creator & Admin only)
+    // Channels (Creator & Admin: view list, detail/edit, and delete)
     Route::middleware('role:creator,admin')->group(function () {
         Route::get('/channels', [ChannelController::class, 'index'])->name('channels.index');
+        Route::get('/channels/{channel}/edit', [ChannelController::class, 'edit'])->name('channels.edit');
+        Route::delete('/channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
+    });
+
+    // Channels (Creator only: create, store, and update)
+    Route::middleware('role:creator')->group(function () {
         Route::get('/channels/create', [ChannelController::class, 'create'])->name('channels.create');
         Route::post('/channels', [ChannelController::class, 'store'])->name('channels.store');
-        Route::get('/channels/{channel}/edit', [ChannelController::class, 'edit'])->name('channels.edit');
         Route::put('/channels/{channel}', [ChannelController::class, 'update'])->name('channels.update');
-        Route::delete('/channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
     });
 
     // Admin User Management (Admin only)

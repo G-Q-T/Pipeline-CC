@@ -29,21 +29,19 @@ class ChannelPolicy
 
     /**
      * Determine whether the user can create channels.
+     * Only creator can create channels, admin cannot.
      */
     public function create(User $user): bool
     {
-        return $user->isCreator() || $user->isAdmin();
+        return $user->isCreator();
     }
 
     /**
      * Determine whether the user can update the channel.
+     * Only creator owner can update the channel, admin cannot.
      */
     public function update(User $user, Channel $channel): bool
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
-
         return $user->isCreator() && $channel->user_id === $user->id;
     }
 

@@ -125,31 +125,59 @@ Buka browser dan akses aplikasi di: **[http://127.0.0.1:8000](http://127.0.0.1:8
 
 ---
 
-## 🔑 Akun Login Default (Seed Credentials)
+## Akun Login Default (Seed Credentials)
 
 Semua akun default menggunakan password: **`password`**
 
-| Peran (Role)      | Email                   | Password   | Hak Akses Utama                                                         |
-| ----------------- | ----------------------- | ---------- | ----------------------------------------------------------------------- |
-| **Administrator** | `admin@pipeline.test`   | `password` | Pengawasan sistem, ganti role user, akses penuh                         |
-| **Creator**       | `creator@pipeline.test` | `password` | Buat konten, kelola channel, tugaskan editor, publikasi postingan       |
-| **Editor**        | `editor@pipeline.test`  | `password` | Edit judul, draft naskah & deskripsi, checklist, pindah status ke Ready |
+1. Admin
+
+- Email: admin@pipeline.test
+- Password: password
+
+2. Creator
+
+- Email: creator@pipeline.test
+- Password: password
+
+3. Editor
+
+- Email: editor@pipeline.test
+- Password: password
 
 ---
 
-## 👥 Matriks Hak Akses & Alur Kerja
+## Matriks Hak Akses & Alur Kerja
 
-| Fitur / Aksi                          |  Admin   |                         Creator                          |              Editor               |
-| ------------------------------------- | :------: | :------------------------------------------------------: | :-------------------------------: |
-| **Kelola Channel (CRUD)**             | ✅ Penuh |                    ✅ Channel Sendiri                    |           ❌ Baca Saja            |
-| **Buat Konten Baru**                  |    ✅    |                            ✅                            |                ❌                 |
-| **Edit Judul, Naskah & Deskripsi**    |    ✅    |                            ✅                            | ✅ (Hanya konten yang ditugaskan) |
-| **Edit Jadwal Rilis (Timeline)**      |    ✅    |                            ✅                            |     ❌ (Hanya Creator/Admin)      |
-| **Tugaskan Editor**                   |    ✅    |                            ✅                            |                ❌                 |
-| **Pindahkan Status ke `Ready`**       |    ✅    | ✅ (Konten solo)<br>⏳ Menunggu Editor (Jika ditugaskan) |  ✅ (Setelah selesai pengerjaan)  |
-| **Publikasikan Konten (`Published`)** |    ✅    |               ✅ (Wajib isi URL & Tanggal)               |     ❌ (Hanya Creator/Admin)      |
-| **Catat Metrik Manual**               |    ✅    |                            ✅                            |           ❌ Baca Saja            |
-| **Manajemen Role User**               |    ✅    |                            ❌                            |                ❌                 |
+1. Admin
+
+- Kelola Channel: cuman bisa delete channel creator
+- monitoring Metrik: cuman bisa read d metrik content
+- Manajemen Role User: Dapat mengelola role pengguna, termasuk Creator dan Editor.
+
+2. Creator
+
+- Kelola Channel: Dapat membuat, melihat, mengubah, dan menghapus channel miliknya sendiri.
+- Buat Konten Baru: Dapat membuat konten baru pada channel yang dimiliki atau dikelolanya.
+- Edit Konten: Dapat mengubah judul, naskah, dan deskripsi konten miliknya.
+- Kelola Jadwal Rilis: Dapat mengatur dan mengubah jadwal rilis konten.
+- Tugaskan Editor: Dapat menugaskan editor untuk mengerjakan konten miliknya.
+- Kelola Status Konten:
+    - Dapat memindahkan konten solo menjadi Ready.
+    - Jika konten ditugaskan kepada Editor, Creator menunggu Editor menyelesaikan pengerjaan sebelum konten dilanjutkan ke tahap berikutnya.
+- Publikasikan Konten: Dapat mengubah status konten menjadi Published dengan wajib mengisi URL publikasi dan tanggal publikasi.
+- Catat Metrik: Dapat mencatat metrik performa konten secara manual.
+
+3. Editor
+
+- Akses Channel: Hanya dapat melihat channel dan tidak memiliki izin untuk mengelolanya.
+- Buat Konten Baru: Tidak memiliki izin untuk membuat konten baru.
+- Edit Konten: Dapat mengubah judul, naskah, dan deskripsi hanya pada konten yang ditugaskan kepadanya.
+- Kelola Jadwal Rilis: Tidak memiliki izin untuk mengubah jadwal rilis konten.
+- Tugaskan Editor: Tidak memiliki izin untuk menugaskan editor lain.
+- Kelola Status Konten: Dapat memindahkan status konten menjadi Ready setelah menyelesaikan pengerjaannya.
+- Publikasikan Konten: Tidak memiliki izin untuk memublikasikan konten.
+- Catat Metrik: Hanya dapat melihat metrik performa konten dan tidak dapat mengubahnya.
+- Manajemen Role User: Tidak memiliki izin untuk mengelola role pengguna.
 
 ### Aturan Bisnis Utama:
 
