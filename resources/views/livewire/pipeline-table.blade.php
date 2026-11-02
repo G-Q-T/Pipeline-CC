@@ -143,13 +143,11 @@
                                     <td>
                                         @php
                                             $allowedTransitions = [];
-                                            if (!auth()->user()->isAdmin()) {
-                                                $allowedTransitions = $content->getAllowedTransitions();
-                                                if (auth()->user()->isEditor()) {
-                                                    $allowedTransitions = in_array('ready', $allowedTransitions) && $content->status !== 'ready' ? ['ready'] : [];
-                                                }
-                                                if (auth()->user()->isCreator() && $content->editors->isNotEmpty()) {
-                                                    $allowedTransitions = array_values(array_filter($allowedTransitions, fn ($s) => $s !== \App\Models\Content::STATUS_READY));
+                                            // Creator and Admin: Read-only in table view (no select/dropdown to change status)
+                                            if (auth()->user()->isEditor()) {
+                                                $allChecklistsDone = $content->checklists->isNotEmpty() && ! $content->checklists->contains('is_completed', false);
+                                                if ($allChecklistsDone && in_array('ready', $content->getAllowedTransitions()) && $content->status !== 'ready') {
+                                                    $allowedTransitions = ['ready'];
                                                 }
                                             }
                                         @endphp
@@ -159,22 +157,12 @@
                                                     <x-status-badge :status="$content->status" />
                                                 </button>
                                                 <ul class="dropdown-menu shadow-sm border-0 small">
-                                                    <li class="dropdown-header text-uppercase" style="font-size: 0.65rem;">Pindah Status:</li>
-                                                    @foreach ($allowedTransitions as $statusOption)
-                                                        @if ($statusOption === 'published')
-                                                            <li>
-                                                                <a class="dropdown-item text-success" href="{{ route('contents.show', $content) }}">
-                                                                    <i class="bi bi-send-check me-1"></i> Terbitkan (Buka Form)
-                                                                </a>
-                                                            </li>
-                                                        @else
-                                                            <li>
-                                                                <button type="button" class="dropdown-item" wire:click="changeStatus({{ $content->id }}, '{{ $statusOption }}')">
-                                                                    <i class="bi bi-arrow-right me-1"></i> {{ ucfirst($statusOption) }}
-                                                                </button>
-                                                            </li>
-                                                        @endif
-                                                    @endforeach
+                                                    <li class="dropdown-header text-uppercase" style="font-size: 0.65rem;">Tugas Selesai:</li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item text-success fw-semibold" wire:click="changeStatus({{ $content->id }}, 'ready')">
+                                                            <i class="bi bi-check-circle me-1"></i> Tandai Ready
+                                                        </button>
+                                                    </li>
                                                 </ul>
                                             </div>
                                         @else
@@ -211,13 +199,18 @@
                                     </td>
 
                                     <!-- Checklist Progress -->
-                                    <td style="min-width: 100px;">
+                                    <td style="min-width: 110px;">
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="progress flex-grow-1" style="height: 6px;">
-                                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $content->checklist_percentage }}%"></div>
+                                                <div class="progress-bar {{ $content->checklist_percentage === 100 ? 'bg-success' : 'bg-primary' }}" role="progressbar" style="width: {{ $content->checklist_percentage }}%"></div>
                                             </div>
                                             <span class="small fw-semibold text-muted" style="font-size: 0.75rem;">{{ $content->checklist_percentage }}%</span>
                                         </div>
+                                        @if ($content->checklists->isNotEmpty())
+                                            <div class="text-muted" style="font-size: 0.7rem;">
+                                                {{ $content->checklists->where('is_completed', true)->count() }}/{{ $content->checklists->count() }} tugas
+                                            </div>
+                                        @endif
                                     </td>
 
                                     <!-- Actions -->

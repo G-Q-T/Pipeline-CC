@@ -26,7 +26,7 @@ Route::middleware('auth')->group(function () {
 
     // Pipeline Content
     Route::get('/contents', [ContentController::class, 'index'])->name('contents.index');
-    Route::get('/contents/kanban', [ContentController::class, 'kanban'])->name('contents.kanban');
+    Route::get('/contents/kanban', fn () => redirect()->route('contents.index'))->name('contents.kanban');
     Route::get('/contents/create', [ContentController::class, 'create'])->name('contents.create');
     Route::post('/contents', [ContentController::class, 'store'])->name('contents.store');
     Route::get('/contents/{content}', [ContentController::class, 'show'])->name('contents.show');

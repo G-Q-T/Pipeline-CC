@@ -141,9 +141,16 @@ class ContentPolicy
             return false;
         }
 
-        // Editor is strictly limited to completing their work to 'ready'
-        if ($user->isEditor() && $targetStatus !== Content::STATUS_READY) {
-            return false;
+        // Editor is strictly limited to completing their work to 'ready' after completing all creator's tasks
+        if ($user->isEditor()) {
+            if ($targetStatus !== Content::STATUS_READY) {
+                return false;
+            }
+
+            // Editor must complete all tasks assigned by creator
+            if ($content->checklists()->where('is_completed', false)->exists()) {
+                return false;
+            }
         }
 
         // Creator cannot advance to 'ready' if the content has assigned editor(s);

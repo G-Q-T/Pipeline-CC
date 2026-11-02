@@ -68,6 +68,15 @@ class PipelineTable extends Component
             return;
         }
 
+        if ($user->isEditor() && $targetStatus === Content::STATUS_READY) {
+            $incompleteChecklists = $content->checklists()->where('is_completed', false)->count();
+
+            if ($incompleteChecklists > 0) {
+                session()->flash('error', 'Tidak dapat mengubah status ke Ready: Terdapat ' . $incompleteChecklists . ' tugas checklist dari Creator yang belum diselesaikan. Harap selesaikan seluruh tugas terlebih dahulu.');
+                return;
+            }
+        }
+
         if ($user->isCreator() && $targetStatus === Content::STATUS_READY && $content->editors()->exists()) {
             session()->flash('error', 'Konten ini sedang ditugaskan kepada Editor. Tahap Ready harus diselesaikan oleh Editor terlebih dahulu.');
             return;

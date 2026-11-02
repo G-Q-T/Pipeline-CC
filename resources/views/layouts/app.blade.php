@@ -39,14 +39,9 @@
 
             <div class="text-uppercase text-muted fw-bold px-3 mt-3 mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">Produksi Konten</div>
 
-            <a href="{{ route('contents.index') }}" class="sidebar-nav-link {{ request()->routeIs('contents.index') && !request()->routeIs('contents.kanban') ? 'active' : '' }}">
+            <a href="{{ route('contents.index') }}" class="sidebar-nav-link {{ request()->routeIs('contents.*') && request()->get('assigned') !== 'me' ? 'active' : '' }}">
                 <i class="bi bi-table"></i>
-                <span>Pipeline Tabel</span>
-            </a>
-
-            <a href="{{ route('contents.kanban') }}" class="sidebar-nav-link {{ request()->routeIs('contents.kanban') ? 'active' : '' }}">
-                <i class="bi bi-kanban"></i>
-                <span>Pipeline Kanban</span>
+                <span>Pipeline Konten</span>
             </a>
 
             <a href="{{ route('metrics.index') }}" class="sidebar-nav-link {{ request()->routeIs('metrics.*') ? 'active' : '' }}">

@@ -22,11 +22,8 @@
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <div class="d-inline-flex gap-2">
-                <a href="{{ route('contents.kanban') }}" class="btn btn-outline-secondary btn-sm rounded-3">
-                    <i class="bi bi-kanban me-1"></i> Buka Kanban
-                </a>
                 <a href="{{ route('contents.index') }}" class="btn btn-outline-primary btn-sm rounded-3">
-                    <i class="bi bi-table me-1"></i> Buka Tabel
+                    <i class="bi bi-table me-1"></i> Buka Tabel Konten
                 </a>
             </div>
         </div>

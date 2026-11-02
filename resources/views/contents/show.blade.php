@@ -70,11 +70,15 @@
             <div class="d-flex flex-wrap align-items-center gap-2">
                 @php
                     $user = auth()->user();
+                    $totalTasks = $content->checklists->count();
+                    $incompleteTasks = $content->checklists->where('is_completed', false)->count();
+                    $hasIncompleteTasks = $incompleteTasks > 0;
+
                     $allowedStatuses = [];
                     if (!$user->isAdmin()) {
                         $allowedStatuses = $content->getAllowedTransitions();
                         if ($user->isEditor()) {
-                            $allowedStatuses = in_array('ready', $allowedStatuses) && $content->status !== 'ready' ? ['ready'] : [];
+                            $allowedStatuses = in_array('ready', $allowedStatuses) && $content->status !== 'ready' && !$hasIncompleteTasks ? ['ready'] : [];
                         }
                         if ($user->isCreator() && $content->editors->isNotEmpty()) {
                             $allowedStatuses = array_values(array_filter($allowedStatuses, fn ($s) => $s !== \App\Models\Content::STATUS_READY));
@@ -94,6 +98,21 @@
                         </span>
                     @endif
 
+                    @if ($user->isCreator() && $content->editors->isNotEmpty() && $totalTasks === 0)
+                        <span class="badge bg-warning-subtle text-warning-emphasis border px-3 py-2 small d-inline-flex align-items-center gap-1.5 shadow-xs">
+                            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                            <strong>Validasi:</strong> Wajib memberikan minimal 1 tugas untuk editor.
+                        </span>
+                    @endif
+
+                    @if ($user->isEditor() && $content->status !== 'ready')
+                        @if ($incompleteTasks > 0)
+                            <span class="badge bg-warning-subtle text-warning-emphasis border px-3 py-2 small d-inline-flex align-items-center gap-1.5">
+                                <i class="bi bi-hourglass-split text-warning"></i> Selesaikan seluruh tugas dari Creator (<strong>{{ $incompleteTasks }} tugas tersisa</strong>) untuk dapat mengubah status ke Ready.
+                            </span>
+                        @endif
+                    @endif
+
                     @foreach ($allowedStatuses as $nextStatus)
                         @if ($nextStatus === 'published')
                             @can('managePublication', $content)
@@ -101,6 +120,14 @@
                                     <i class="bi bi-send-check me-1"></i> Terbitkan (Publish)
                                 </button>
                             @endcan
+                        @elseif ($user->isEditor() && $nextStatus === 'ready')
+                            <form method="POST" action="{{ route('contents.status.update', $content) }}" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="status" value="ready">
+                                <button type="submit" class="btn btn-sm btn-success rounded-3 shadow-sm">
+                                    <i class="bi bi-check-circle me-1"></i> Semua Tugas Selesai — Ubah Status ke Ready
+                                </button>
+                            </form>
                         @else
                             <form method="POST" action="{{ route('contents.status.update', $content) }}" class="d-inline">
                                 @csrf
@@ -220,62 +247,142 @@
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-white py-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h6 class="fw-bold mb-0"><i class="bi bi-check2-square me-2 text-primary"></i>Checklist Produksi</h6>
-                        <span class="badge bg-primary-subtle text-primary border">{{ $content->checklist_percentage }}% Selesai</span>
+                        <div>
+                            <h6 class="fw-bold mb-0"><i class="bi bi-check2-square me-2 text-primary"></i>Checklist Produksi</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">Tugas dari Creator untuk diselesaikan oleh Editor</small>
+                        </div>
+                        <span class="badge {{ $content->checklist_percentage === 100 ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} border">
+                            {{ $content->checklist_percentage }}% Selesai ({{ $content->checklists->where('is_completed', true)->count() }}/{{ $content->checklists->count() }})
+                        </span>
                     </div>
                     <div class="progress" style="height: 6px;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $content->checklist_percentage }}%"></div>
+                        <div class="progress-bar {{ $content->checklist_percentage === 100 ? 'bg-success' : 'bg-primary' }}" role="progressbar" style="width: {{ $content->checklist_percentage }}%"></div>
                     </div>
                 </div>
 
                 <div class="card-body p-3">
-                    <!-- Add Checklist Form -->
-                    @can('manageChecklist', $content)
-                        <form method="POST" action="{{ route('contents.checklists.store', $content) }}" class="mb-3">
-                            @csrf
-                            <div class="input-group">
-                                <input type="text"
-                                       class="form-control form-control-sm"
-                                       name="task_name"
-                                       placeholder="Tambah tugas baru (misal: Sound Design)..."
-                                       maxlength="255"
-                                       required>
-                                <button type="submit" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-plus-lg"></i> Tambah
-                                </button>
+                    <!-- Validation Alert: Creator must provide at least 1 task if editor is assigned -->
+                    @if (auth()->user()->isCreator() && $content->editors->isNotEmpty() && $content->checklists->isEmpty())
+                        <div class="alert alert-warning border-warning-subtle d-flex align-items-center gap-2.5 mb-3 rounded-3 shadow-xs">
+                            <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0"></i>
+                            <div>
+                                <div class="fw-bold small text-dark">Wajib Memberikan Minimal 1 Tugas untuk Editor!</div>
+                                <div class="text-secondary small" style="font-size: 0.8rem;">Konten ini telah ditugaskan kepada Editor. Anda belum memberikan tugas. Wajib memberikan minimal 1 tugas untuk editor agar proses pengerjaan dapat berjalan.</div>
                             </div>
-                        </form>
-                    @endcan
+                        </div>
+                    @endif
+
+                    <!-- Add Checklist Form (Creator only) -->
+                    @if (auth()->user()->isCreator() && $content->user_id === auth()->id())
+                        <div class="bg-light p-3 rounded-3 mb-3 border">
+                            <div class="fw-semibold small mb-2 text-dark d-flex align-items-center gap-1">
+                                <i class="bi bi-plus-circle text-primary"></i> Berikan Tugas untuk Editor
+                            </div>
+                            <form method="POST" action="{{ route('contents.checklists.store', $content) }}">
+                                @csrf
+                                <!-- Satu Pilihan Select Tugas Editor (Dengan opsi Input Manual) -->
+                                <div class="mb-2">
+                                    <label class="form-label text-muted mb-1" style="font-size: 0.72rem; font-weight: 600;">PILIHAN TUGAS EDITOR (PILIH ATAU INPUT MANUAL):</label>
+                                    <select id="presetTaskSelect" name="task_preset" class="form-select form-select-sm mb-2" onchange="handlePresetChange(this)" required>
+                                        <option value="" disabled selected>-- Pilih Jenis Tugas Editor --</option>
+                                        <option value="Cutting & Trimming Video (Rough Cut & Pacing)">1. Cutting & Trimming Video (Rough Cut & Pacing)</option>
+                                        <option value="Color Grading & Audio Mixing">2. Color Grading & Audio Mixing</option>
+                                        <option value="Subtitle, Visual Effects & Thumbnail">3. Subtitle, Visual Effects & Thumbnail</option>
+                                        <option value="manual">4. Input Manual (Ketik Tugas Sendiri)...</option>
+                                    </select>
+                                </div>
+
+                                <!-- Input Nama Tugas Manual (Muncul jika opsi manual dipilih) -->
+                                <div id="manualTaskWrapper" class="mb-2 d-none">
+                                    <label class="form-label text-muted mb-1" style="font-size: 0.72rem; font-weight: 600;">KETIK NAMA TUGAS MANUAL:</label>
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           id="manualTaskInput"
+                                           name="manual_task_name"
+                                           placeholder="Masukkan nama tugas (misal: Sound Design / Motion Graphics)...">
+                                </div>
+
+                                <!-- Input Keterangan Tugas untuk Editor (Tanpa auto terisi agar leluasa) -->
+                                <div class="mb-3">
+                                    <label class="form-label text-muted mb-1" style="font-size: 0.72rem; font-weight: 600;">KETERANGAN TUGAS UNTUK EDITOR (DETAIL / CATATAN):</label>
+                                    <textarea class="form-control form-control-sm"
+                                              id="keteranganInput"
+                                              name="keterangan"
+                                              rows="3"
+                                              placeholder="Tuliskan keterangan detail tugas untuk editor di sini secara leluasa..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-sm btn-primary w-100 rounded-3 shadow-sm">
+                                    <i class="bi bi-plus-lg me-1"></i> Tambahkan Tugas untuk Editor
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+
+                    @if (auth()->user()->isCreator() && $content->user_id === auth()->id() && $content->checklists->isNotEmpty())
+                        <div class="alert alert-light border small text-muted py-2 px-3 mb-2 d-flex align-items-center">
+                            <span><i class="bi bi-info-circle text-primary me-1"></i>Penceklisan tugas dilakukan oleh Editor. Jika ada kesalahan input tugas, silakan gunakan tombol hapus (<i class="bi bi-trash text-danger"></i>) di sebelah kanan.</span>
+                        </div>
+                    @endif
 
                     <!-- Checklists List -->
                     @if ($content->checklists->isEmpty())
-                        <x-empty-state icon="bi-clipboard-check" title="Belum ada checklist" description="Tambahkan checklist tugas produksi agar progres konten terpantau rapi." />
+                        @if ($content->editors->isNotEmpty())
+                            <x-empty-state icon="bi-clipboard-x" title="Belum ada tugas untuk editor" description="Wajib memberikan minimal 1 tugas untuk editor agar proses editing dapat dimulai." />
+                        @else
+                            <x-empty-state icon="bi-clipboard-check" title="Belum ada checklist tugas" description="Creator belum menambahkan checklist tugas produksi." />
+                        @endif
                     @else
-                        <div class="list-group list-group-flush border-top">
+                        <div class="list-group list-group-flush border-0">
                             @foreach ($content->checklists as $item)
-                                <div class="list-group-item px-0 py-2.5 d-flex align-items-center justify-content-between border-0 border-bottom">
-                                    <form method="POST" action="{{ route('checklists.toggle', $item) }}" class="d-flex align-items-center gap-2 flex-grow-1 me-2">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input class="form-check-input mt-0"
-                                               type="checkbox"
-                                               onChange="this.form.submit()"
-                                               {{ $item->is_completed ? 'checked' : '' }}
-                                               @cannot('manageChecklist', $content) disabled @endcannot>
-                                        <span class="small {{ $item->is_completed ? 'text-decoration-line-through text-muted' : 'text-dark fw-medium' }}">
-                                            {{ $item->task_name }}
-                                        </span>
-                                    </form>
-
-                                    @can('manageChecklist', $content)
-                                        <form method="POST" action="{{ route('checklists.destroy', $item) }}" onsubmit="return confirm('Hapus tugas ini?');">
+                                <div class="p-3 rounded-3 mb-2 border transition {{ $item->is_completed ? 'bg-light border-light-subtle' : 'bg-white border-secondary-subtle shadow-xs' }}">
+                                    <div class="d-flex align-items-start justify-content-between gap-2">
+                                        <form method="POST" action="{{ route('checklists.toggle', $item) }}" class="d-flex align-items-start gap-2.5 flex-grow-1">
                                             @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-link text-danger p-0 border-0" title="Hapus tugas">
-                                                <i class="bi bi-x-lg small"></i>
-                                            </button>
+                                            @method('PATCH')
+                                            <input class="form-check-input mt-1 flex-shrink-0"
+                                                   type="checkbox"
+                                                   onChange="this.form.submit()"
+                                                   {{ $item->is_completed ? 'checked' : '' }}
+                                                   @if(!auth()->user()->isEditor()) disabled @endif
+                                                   title="{{ auth()->user()->isEditor() ? ($item->is_completed ? 'Tandai belum selesai' : 'Tandai selesai') : 'Hanya Editor yang bertugas yang dapat menceklis tugas ini' }}">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                                    <span class="fw-semibold small {{ $item->is_completed ? 'text-decoration-line-through text-muted' : 'text-dark' }}">
+                                                        {{ $item->task_name }}
+                                                    </span>
+                                                    @if ($item->is_completed)
+                                                        <span class="badge bg-success-subtle text-success border px-1.5 py-0.5" style="font-size: 0.65rem;">
+                                                            <i class="bi bi-check2"></i> Selesai
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-warning-subtle text-warning-emphasis border px-1.5 py-0.5" style="font-size: 0.65rem;">
+                                                            <i class="bi bi-clock"></i> Belum Selesai
+                                                        </span>
+                                                    @endif
+                                                </div>
+
+                                                @if ($item->keterangan)
+                                                    <div class="mt-2 p-2 rounded-2 {{ $item->is_completed ? 'bg-white text-muted border' : 'bg-primary-subtle bg-opacity-25 border-start border-3 border-primary text-dark' }}" style="font-size: 0.8rem;">
+                                                        <div class="d-flex align-items-center gap-1 fw-semibold text-primary mb-0.5" style="font-size: 0.72rem;">
+                                                            <i class="bi bi-card-checklist"></i> Keterangan Tugas untuk Editor:
+                                                        </div>
+                                                        <div style="line-height: 1.45;">{{ $item->keterangan }}</div>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </form>
-                                    @endcan
+
+                                        @if (auth()->user()->isCreator() && $content->user_id === auth()->id())
+                                            <form method="POST" action="{{ route('checklists.destroy', $item) }}" onsubmit="return confirm('Hapus tugas ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-link text-danger p-0 border-0" title="Hapus tugas">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -449,3 +556,24 @@
     </div>
     @endcan
 @endsection
+
+@push('scripts')
+<script>
+    function handlePresetChange(select) {
+        const manualWrapper = document.getElementById('manualTaskWrapper');
+        const manualInput = document.getElementById('manualTaskInput');
+        if (!manualWrapper || !manualInput) return;
+
+        if (select.value === 'manual') {
+            manualWrapper.classList.remove('d-none');
+            manualInput.required = true;
+            manualInput.focus();
+        } else {
+            manualWrapper.classList.add('d-none');
+            manualInput.required = false;
+            manualInput.value = '';
+        }
+        // Catatan: Keterangan sengaja TIDAK di-auto isi agar Creator leluasa mengetikkan detail instruksi khusus
+    }
+</script>
+@endpush

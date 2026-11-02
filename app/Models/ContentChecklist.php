@@ -12,6 +12,7 @@ class ContentChecklist extends Model
     protected $fillable = [
         'content_id',
         'task_name',
+        'keterangan',
         'is_completed',
     ];
 

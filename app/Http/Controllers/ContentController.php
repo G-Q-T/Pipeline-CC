@@ -199,8 +199,21 @@ class ContentController extends Controller
         $targetStatus = $validated['status'];
         $user = Auth::user();
 
+        // Creator validation: if editor is assigned, creator must give at least 1 task before moving to editing
+        if ($user->isCreator() && $content->editors()->exists() && $content->checklists()->count() === 0 && in_array($targetStatus, [Content::STATUS_RECORDING, Content::STATUS_EDITING])) {
+            return back()->with('error', 'Validasi gagal: Anda wajib memberikan minimal 1 tugas untuk Editor sebelum melanjutkan tahapan produksi.');
+        }
+
         if ($user->isCreator() && $targetStatus === Content::STATUS_READY && $content->editors()->exists()) {
             return back()->with('error', 'Konten ini sedang ditugaskan kepada Editor. Tahap Ready harus diselesaikan oleh Editor terlebih dahulu.');
+        }
+
+        if ($user->isEditor() && $targetStatus === Content::STATUS_READY) {
+            $incompleteChecklists = $content->checklists()->where('is_completed', false)->count();
+
+            if ($incompleteChecklists > 0) {
+                return back()->with('error', 'Tidak dapat mengubah status ke Ready: Terdapat ' . $incompleteChecklists . ' tugas checklist dari Creator yang belum diselesaikan. Harap selesaikan seluruh tugas terlebih dahulu.');
+            }
         }
 
         if (! Gate::allows('updateStatus', [$content, $targetStatus])) {
@@ -314,17 +327,32 @@ class ContentController extends Controller
     {
         Gate::authorize('manageChecklist', $content);
 
+        if (! Auth::user()->isCreator() || $content->user_id !== Auth::id()) {
+            return back()->with('error', 'Hanya Creator pemilik konten yang dapat menambahkan tugas checklist untuk Editor.');
+        }
+
+        $taskPreset = $request->input('task_preset');
+        $taskName = ($taskPreset === 'manual')
+            ? $request->input('manual_task_name')
+            : ($taskPreset ?: $request->input('task_name'));
+
+        $request->merge(['task_name' => $taskName]);
+
         $validated = $request->validate([
             'task_name' => ['required', 'string', 'max:255'],
+            'keterangan' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'task_name.required' => 'Pilih jenis tugas dari pilihan yang tersedia atau masukkan nama tugas manual.',
         ]);
 
         ContentChecklist::create([
             'content_id' => $content->id,
             'task_name' => $validated['task_name'],
+            'keterangan' => $validated['keterangan'] ?? null,
             'is_completed' => false,
         ]);
 
-        return redirect()->route('contents.show', $content)->with('success', 'Tugas checklist berhasil ditambahkan.');
+        return redirect()->route('contents.show', $content)->with('success', 'Tugas checklist untuk Editor berhasil ditambahkan.');
     }
 
     /**
@@ -333,6 +361,17 @@ class ContentController extends Controller
     public function toggleChecklist(Request $request, ContentChecklist $checklist): RedirectResponse|JsonResponse
     {
         Gate::authorize('manageChecklist', $checklist->content);
+
+        $user = Auth::user();
+
+        // Creator cannot check off tasks for editor
+        if ($user->isCreator()) {
+            return back()->with('error', 'Creator tidak dapat menceklis tugas untuk Editor. Tugas hanya dapat diceklis oleh Editor. Jika ada kesalahan input tugas, silakan gunakan tombol hapus.');
+        }
+
+        if (! $user->isEditor() || ! $checklist->content->editors()->where('editor_id', $user->id)->exists()) {
+            abort(403, 'Hanya Editor yang ditugaskan pada konten ini yang dapat menceklis tugas.');
+        }
 
         $checklist->is_completed = ! $checklist->is_completed;
         $checklist->save();
@@ -354,6 +393,10 @@ class ContentController extends Controller
     public function destroyChecklist(ContentChecklist $checklist): RedirectResponse
     {
         Gate::authorize('manageChecklist', $checklist->content);
+
+        if (! Auth::user()->isCreator() || $checklist->content->user_id !== Auth::id()) {
+            return back()->with('error', 'Hanya Creator pemilik konten yang dapat menghapus tugas checklist.');
+        }
 
         $checklist->delete();
 
